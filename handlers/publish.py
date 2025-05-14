@@ -1,3 +1,6 @@
+from aiogram import types
+from keyboards.description_menu import description_keyboard
+from .description import extract_quote, extract_description
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from aiogram.fsm.context import FSMContext

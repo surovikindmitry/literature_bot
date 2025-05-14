@@ -1,5 +1,14 @@
-BOT_TOKEN=ваш_токен_бота
-OPENROUTER_API_KEY=ваш_ключ_openrouter
-AI_MODEL=openai/gpt-3.5-turbo
-AI_PROMPT=Напиши цитату из книги "{book}" автора {author} и краткое мотивирующее описание произведения (не более 350 слов). Цитата должна быть содержательной и выделяться кавычками. Описание должно быть вдохновляющим и лаконичным.
-ADMIN_CHANNEL_ID=@ваш_канал
+# Токен бота от @BotFather
+BOT_TOKEN=ваш_токен
+
+# API ключ от OpenRouter.ai
+OPENROUTER_API_KEY=ваш_ключ
+
+# Модель ИИ (например: openai/gpt-3.5-turbo)
+AI_MODEL=ваша_модель
+
+# Промт для нейросети
+AI_PROMPT=Ваш промт...
+
+# ID канала (начинается с @ или -100)
+ADMIN_CHANNEL_ID=ваш_канал

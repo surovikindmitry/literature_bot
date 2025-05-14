@@ -26,11 +26,6 @@ async def start_description(message: Message, state: FSMContext):
     )
     await state.set_state(DescriptionState.waiting_for_book)
 
-@router.message(DescriptionState.waiting_for_book)
-async def process_book(message: Message, state: FSMContext):
-    input_text = message.text.strip()
-
-
 
 @router.message(DescriptionState.waiting_for_book)
 async def process_book(message: Message, state: FSMContext):
@@ -145,3 +140,11 @@ def format_ai_response(book, author, ai_response):
         f"<b><i>\"{quote}\"</i></b>\n\n"
         f"{description}"
     )
+
+def extract_quote(text):
+    quote_match = re.search(r'"([^"]*)"', text)
+    return quote_match.group(1) if quote_match else "Цитата из книги"
+
+def extract_description(text):
+    parts = re.split(r'"[^"]*"', text, 1)
+    return parts[-1].strip() if len(parts) > 1 else text
