@@ -1,6 +1,6 @@
 import re
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton  # Добавлено
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from keyboards.main_menu import main_keyboard
@@ -22,44 +22,42 @@ async def start_description(message: Message, state: FSMContext):
         "Автор - Название книги\n"
         "или\n"
         "Автор \"Название книги\"",
-        reply_markup=types.ReplyKeyboardRemove()
+        reply_markup=ReplyKeyboardRemove()  # Убрано types.
     )
     await state.set_state(DescriptionState.waiting_for_book)
-
 
 @router.message(DescriptionState.waiting_for_book)
 async def process_book(message: Message, state: FSMContext):
     input_text = message.text.strip()
 
-    # Улучшенная проверка формата
-    if '-' in input_text:
-        parts = [part.strip() for part in input_text.split('-', 1)]
-    elif '"' in input_text:
-        parts = [part.strip() for part in input_text.split('"', 1)]
-        parts[1] = parts[1].replace('"', '')
+    # Разделяем на автора и название по кавычкам или дефису с учетом пробелов
+    if '"' in input_text:
+        parts = re.split(r'"(.+?)"', input_text)  # Ищем текст в кавычках
+        if len(parts) >= 3:
+            author = parts[0].strip()
+            book = parts[1].strip()
+        else:
+            await message.answer("❌ Неверный формат. Используйте: Автор \"Название книги\"")
+            return
     else:
-        await message.answer(
-            "❌ Неверный формат. Используйте:\n"
-            "Автор - Название книги\n"
-            "или\n"
-            "Автор \"Название книги\""
-        )
-        return
+        # Разделяем по первому дефису/тире, если нет кавычек
+        parts = re.split(r'\s*[-—]\s*', input_text, maxsplit=1)
+        if len(parts) == 2:
+            author, book = parts[0].strip(), parts[1].strip()
+        else:
+            await message.answer("❌ Неверный формат. Используйте: Автор - Название книги")
+            return
 
-    if len(parts) != 2 or len(parts[0]) < 2 or len(parts[1]) < 2:
-        await message.answer(
-            "❌ Недостаточно данных. Укажите автора (минимум 2 символа) "
-            "и название книги (минимум 2 символа)."
-        )
+    # Проверка минимальной длины
+    if len(author) < 2 or len(book) < 2:
+        await message.answer("❌ Автор и название должны быть не короче 2 символов.")
         return
-
-    author, book = parts
 
     await state.update_data(author=author, book=book)
 
-    markup = types.ReplyKeyboardMarkup(
+    markup = ReplyKeyboardMarkup(
         keyboard=[
-            [types.KeyboardButton(text="Запрос"), types.KeyboardButton(text="Отмена")]
+            [KeyboardButton(text="Запрос"), KeyboardButton(text="Отмена")]
         ],
         resize_keyboard=True
     )
@@ -69,7 +67,6 @@ async def process_book(message: Message, state: FSMContext):
         "Нажмите 'Запрос' для генерации описания или 'Отмена' для возврата.",
         reply_markup=markup
     )
-
 
 @router.message(F.text == "Запрос")
 async def make_ai_request(message: Message, state: FSMContext):
@@ -136,11 +133,11 @@ def format_ai_response(book, author, ai_response):
     description = description.strip()
 
     return (
-        f"<b><font color='#00e600'>{book} - {author}</font></b>\n\n"
-        f"<b><i>\"{quote}\"</i></b>\n\n"
+        f"<b>📖 {book}</b>\n"
+        f"<i>✍️ {author}</i>\n\n"
+        f"<b><i>📌 \"{quote}\"</i></b>\n\n"
         f"{description}"
     )
-
 def extract_quote(text):
     quote_match = re.search(r'"([^"]*)"', text)
     return quote_match.group(1) if quote_match else "Цитата из книги"
